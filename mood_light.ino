@@ -13,14 +13,14 @@
 int counter = 0;
 long int show_green_mod = random(32, 128) * 8;  // initiate random 8 multiple for modulus operation
 
-// The initial brightness of each color... range 0 - 255
+// LED brightness array... Red, Green, Blue
 int RGB[3] = {0, 0, 0};
 
 int max_brightness = 255;  // max brightness isn't a constant because we may change later... with a photo cell
 unsigned int delay_time = 30;  // we may also change this too...
 unsigned int pause = 250;
 
-// integer variable(s) to dominate whether an LED should be changing
+// integer variable(s) that rule whether an LED is changing
 int incrementRed = 0;
 int incrementBlue = 0;
 int incrementGreen = 1;
@@ -28,11 +28,11 @@ int incrementGreen = 1;
 // function declarations:
 int check_color(int color, int increment);
 void update();  // you don't actually have to declare void functions,
-void transition();  // but you can call them from anywhere in the program if you do
+void transition();  // but you can call them from anywhere in the program if you do so...
 void serial_output();
 void warm_up();
 void drop_levels();
-void show_green();
+void show_color();
 
 
 void setup(void) {
@@ -84,12 +84,12 @@ void drop_levels() {  // this randomly drops the levels of two of the LEDs to ge
 }
 
 
-void show_green() {
+void show_color() {
     boolean cont = true;
-    long int first = 3;
-    long int second = 3;
+    long int first = NULL;
+    long int second = NULL;
 
-    while (cont != 0) {
+    while (cont != 0) {  // chooses two random lights to dim, so technically it chooses one light to be shown
         first = random(0, 2);
         second = random(0, 2);
 
@@ -116,15 +116,15 @@ void show_green() {
         delay(10);
     }
 
-    for (int i=0; i<max_brightness-5; i++) {
+    for (int i=0; i<max_brightness-5; i++) {  // dims the selected lights to almost 0
         RGB[first]--;
-        RGB[second]--;
+        RGB[second]--;  // should equal 6 when the loop is done
         update();
         delay(10);
     }
 
-    delay(2000);  // pause so the green can try to have some alone time
-    for (int i=0; i<max_brightness-25; i++) {
+    delay(2000);  // pause so the color can try to have some alone time
+    for (int i=0; i<max_brightness-25; i++) {  // increases the recently dimmed lights almost back to full brightness
         RGB[first]++;
         RGB[second]++;
         update();
@@ -164,13 +164,13 @@ void update() {  // Updates the LEDs and the other parameter's status
         delay_time = 40;
         pause = 500;
     } else if (newCell >= 900) {
-        delay_time = 30;
+        delay_time = 25;
         pause = 250;  // default
     } else if (newCell >= 800) {
-        delay_time = 25;
+        delay_time = 20;
         pause = 150;
     } else if (newCell >= 750) {
-        delay_time = 20;
+        delay_time = 15;
         pause = 100;
     }
 
@@ -212,18 +212,18 @@ void transition() {  // main function that controls the LEDs
     incrementGreen = increment_list[1];
     incrementBlue = increment_list[2];
 
-    if (counter % show_green_mod == 0) {
-        show_green();
-        drop_levels();  // we have to create a new starting point after we manually mess with the levels
+    if (counter % show_green_mod == 0) { // if whatever random multiple of 8 divides evenly into our counter, then run:
+        show_color();
+        drop_levels();  // we have to create a new starting point after toying with the levels
         show_green_mod = random(32, 256) * 8;  // create new random number to change how often green shows up
     }
 }
 
 
 void loop(void) {
-    if (counter < 32767) { // stack overflow counter
+    if (counter < 32767) { // 32767 is the highest number you can use in a standard integer
         counter = counter + 1;
-        if (counter % 16 == 0) {  // print out the latest data to the serial monitor every sixteen times
+        if (counter % 12 == 0) {
             serial_output();
         }
     } else {  // if it is maxed out, set the variable equal to zero
