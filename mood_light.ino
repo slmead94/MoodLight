@@ -1,3 +1,14 @@
+/*
+ |>-----------------------------------------------------------<|
+ * Date Created: August 22nd, 2016
+ * Project: Mood Light
+ * Purpose: None... Just having fun
+ *
+ * Creator: Spencer Mead
+ |>-----------------------------------------------------------<|
+ */
+
+
 #include <Arduino.h>
 
 // define LED constants:
@@ -36,6 +47,7 @@ void drop_levels(long int led_ls[2]);
 long int show_color();
 
 
+// Runs only once
 void setup(void) {
     long int first = NULL;
     long int second = NULL;
@@ -55,7 +67,10 @@ void setup(void) {
 }
 
 
-void warm_up() {  // increment all the LEDs by 1 every 35 milliseconds to give a warming effect:
+/*
+ * Slowly brings all of the LEDs up to max brightness
+ * */
+void warm_up() {
     unsigned int time = 60;
 
     for (int i=0; i<max_brightness; i++) {
@@ -72,6 +87,10 @@ void warm_up() {  // increment all the LEDs by 1 every 35 milliseconds to give a
 }
 
 
+
+/*
+ * Drops the levels of the LEDs chosen in pick_two() to almost zero.
+ * */
 void drop_levels(long int led_ls[2]) {  // this randomly drops the levels of two of the LEDs to get a bit of a random starting point
     long int droppers[2] = {random(30, 100)/*RED*/, random(75, 150)/*GREEN*/};
 
@@ -85,6 +104,11 @@ void drop_levels(long int led_ls[2]) {  // this randomly drops the levels of two
 }
 
 
+
+/*
+ * Picks two numbers randomly that correspond to two LEDs which then
+ * will be dimmed and used to help create the cubes new pattern/feel.
+ * */
 long int pick_two() {
     boolean cont = true;
     long int first = NULL;
@@ -105,6 +129,18 @@ long int pick_two() {
 }
 
 
+/*
+ * Every time show_color() is called, that is when the program will be
+ * re-creating the pattern randomly, and essentially rebuilds the
+ * cubes look...
+ *
+ * show_color() is only called periodically... show_green_mod
+ * is the variable that controls how often it is called...
+ * whatever number that is generated for show_green_mod will be
+ * divided into the counter variable (which counts how many times
+ * the program has looped), and if the remainder is zero, it will
+ * run show_color() and create a new pattern
+ */
 long int show_color() { // shows a random color by itself for 2 seconds
     long int first = NULL;
     long int second = NULL;
@@ -141,6 +177,9 @@ long int show_color() { // shows a random color by itself for 2 seconds
 }
 
 
+/*
+ * Sensor data output
+ * */
 void serial_output() {
     int photoCell = analogRead(PIN_SENSOR_ONE); // read in latest data
     int photoCell2 = analogRead(PIN_SENSOR_TWO); // read in latest data
@@ -161,6 +200,13 @@ void serial_output() {
 }
 
 
+/*
+ * Runs check_color() for each LED and then sets the increment values again
+ * in case they have changed.
+ *
+ * Also the main block of code that re-creates the blocks pattern if
+ * show_green_mod divides evenly into counter.
+ * */
 void transition() {  // main function that controls the LEDs
     long int first = NULL;
     long int second = NULL;
@@ -186,6 +232,10 @@ void transition() {  // main function that controls the LEDs
 }
 
 
+/*
+ * Checks to see if the sent LED should be incremented. If not, and it's dark, it
+ * will set the increment value to do so in the future.
+ * */
 int check_color(int color, int increment) {  // This increments the LED if it needs it
     if (RGB[color] >= max_brightness)
         increment = 0;
@@ -201,6 +251,12 @@ int check_color(int color, int increment) {  // This increments the LED if it ne
 }
 
 
+/*
+ * update() reads in the latest data from the PhotoCells
+ * and then using that, updates the cubes behavior...
+ * At the end it assigns the latest brightness value
+ * to each LED
+ * */
 void update() {  // Updates the LEDs and the other parameter's status
     int photoCell = analogRead(PIN_SENSOR_ONE); // read in latest data
     int photoCell2 = analogRead(PIN_SENSOR_TWO); // read in latest data from the other sensor
@@ -229,6 +285,7 @@ void update() {  // Updates the LEDs and the other parameter's status
 }
 
 
+/* Main program loop */
 void loop(void) {
     if (counter < 32767) { // 32767 is the highest number you can use in a standard integer
         counter = counter + 1;
