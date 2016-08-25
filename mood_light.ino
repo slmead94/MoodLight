@@ -1,4 +1,4 @@
-/*
+/*                    What's your Mood?...
  |>-----------------------------------------------------------<|
  * Date Created: August 22nd, 2016
  * Project: Mood Light
@@ -6,6 +6,15 @@
  *
  * Creator: Spencer Mead
  |>-----------------------------------------------------------<|
+ * Bugs / Glitches:
+ *  - Sometimes the transition to another color will get
+ *    stopped and then it catches up a couple seconds
+ *    later.. rather dramatically changing the color...
+ |>-----------------------------------------------------------<|
+ * Additional Notes:
+ *
+ *  update() gets called all over the place, because it's
+ *  easier to have it that way
  */
 
 
@@ -39,7 +48,8 @@ int incrementGreen = 1;
 // function declarations:
 int check_color(int color, int increment);
 long int pick_two();
-void update();  // you don't actually have to declare void functions,
+void update();
+void update_photoCell();  // you don't actually have to declare void functions,
 void transition();  // but you can call them from anywhere in the program if you do so...
 void serial_output();
 void warm_up();
@@ -58,7 +68,7 @@ void setup(void) {
     pinMode(PIN_GREEN, OUTPUT);
     pinMode(PIN_BLUE, OUTPUT);
 
-    update();  // give the LEDs a starting point
+    update();  // initiate the LEDs brightness value
     warm_up();  // give the LEDs a fade up effect
 
     first, second = pick_two();
@@ -74,7 +84,7 @@ void warm_up() {
     unsigned int time = 60;
 
     for (int i=0; i<max_brightness; i++) {
-        if (i < 30) {  // slower warm up during the start
+        if (i % 5 && time > 20) {  // every five iterations, diminish the delay by 1
             time--;
         }
 
@@ -84,6 +94,7 @@ void warm_up() {
         update();
         delay(time);
     }
+    update();
 }
 
 
@@ -223,11 +234,12 @@ void transition() {  // main function that controls the LEDs
     incrementBlue = increment_list[2];
 
     if (counter % show_green_mod == 0) { // if whatever random multiple of 8 divides evenly into our counter, then run:
+        update();
         first, second = show_color();  // in this instance the LEDs are already chosen for us in show_color()
         long int list[2] = {first, second};
 
         drop_levels(list);  // we have to create a new starting point after toying with the levels
-        show_green_mod = random(32, 256) * 8;  // create new random number to change how often green shows up
+        show_green_mod = random(32, 512) * 8;  // create new random number to change how often green shows up
     }
 }
 
@@ -246,6 +258,7 @@ int check_color(int color, int increment) {  // This increments the LED if it ne
         RGB[color]++;
     else
         RGB[color]--;
+    update();
 
     return increment;
 }
@@ -257,12 +270,12 @@ int check_color(int color, int increment) {  // This increments the LED if it ne
  * At the end it assigns the latest brightness value
  * to each LED
  * */
-void update() {  // Updates the LEDs and the other parameter's status
+void update_photoCell() {  // Updates the LEDs and the other parameter's status
     int photoCell = analogRead(PIN_SENSOR_ONE); // read in latest data
     int photoCell2 = analogRead(PIN_SENSOR_TWO); // read in latest data from the other sensor
     int newCell = (photoCell + photoCell2) / 2;  // average of the two sensors readings to create the number we'll use
 
-    if (newCell >= 1100) {  // the darker it gets the slower the cube will get
+    if (newCell >= 1019) {  // the darker it gets the slower the cube will get
         delay_time = 50;
         pause = 750;
     } else if (newCell >= 1000) {  // the darkest its gotten is 10237
@@ -278,7 +291,10 @@ void update() {  // Updates the LEDs and the other parameter's status
         delay_time = 15;
         pause = 100;
     }
+}
 
+
+void update() {
     analogWrite(PIN_RED, RGB[0]);
     analogWrite(PIN_GREEN, RGB[1]);
     analogWrite(PIN_BLUE, RGB[2]);
@@ -296,6 +312,7 @@ void loop(void) {
         counter = 0;
     }
 
+    update_photoCell();
     update();
 
     if (RGB[0] <= 2 || RGB[1] <= 2 || RGB[2] <= 2) {  // if and when an LED is at its lowest point, pause
@@ -303,6 +320,5 @@ void loop(void) {
     }
 
     transition();
-
     delay(delay_time);  // delay(); in milliseconds
 }
