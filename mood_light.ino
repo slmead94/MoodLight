@@ -1,4 +1,5 @@
 /*                    What's your Mood?...
+ * <<<<<<<<<<<<<<<<<-/<<>><<>><<>><<>><<>>\->>>>>>>>>>>>>>>>>>
  |>-----------------------------------------------------------<|
  * Date Created: August 22nd, 2016
  * Project: Mood Light
@@ -15,6 +16,7 @@
  *
  *  update() gets called all over the place, because it's
  *  easier to have it that way
+ |>-----------------------------------------------------------<|
  */
 
 
@@ -29,9 +31,21 @@
 #define PIN_SENSOR_ONE 0  // analog 0
 #define PIN_SENSOR_TWO 1  // analog 1
 
+// function declarations:
+int check_color(int color, int increment);
+long int pick_two();
+void update();
+void update_photoCell();
+void transition();
+void serial_output();
+void warm_up();
+void drop_levels(long int led_ls[2]);
+long int show_color();
+long int create_random_number();
+
 // miscellaneous variable declarations:
 int counter = 0;
-long int show_green_mod = random(32, 128) * 8;  // initiate random 8 multiple for modulus operation
+long int new_pattern_trigger = create_random_number();  // initiate random 8 multiple for modulus operation
 
 // LED brightness array... Red, Green, Blue
 int RGB[3] = {0, 0, 0};
@@ -43,18 +57,7 @@ unsigned int pause = NULL;
 // integer variable(s) that rule whether an LED is changing
 int incrementRed = 0;
 int incrementBlue = 0;
-int incrementGreen = 1;
-
-// function declarations:
-int check_color(int color, int increment);
-long int pick_two();
-void update();
-void update_photoCell();  // you don't actually have to declare void functions,
-void transition();  // but you can call them from anywhere in the program if you do so...
-void serial_output();
-void warm_up();
-void drop_levels(long int led_ls[2]);
-long int show_color();
+int incrementGreen = 0;
 
 
 // Runs only once
@@ -80,7 +83,7 @@ void setup(void) {
 /*
  * Slowly brings all of the LEDs up to max brightness
  * */
-void warm_up() {
+void warm_up(void) {
     unsigned int time = 60;
 
     for (int i=0; i<max_brightness; i++) {
@@ -98,12 +101,11 @@ void warm_up() {
 }
 
 
-
 /*
  * Drops the levels of the LEDs chosen in pick_two() to almost zero.
  * */
 void drop_levels(long int led_ls[2]) {  // this randomly drops the levels of two of the LEDs to get a bit of a random starting point
-    long int droppers[2] = {random(30, 100)/*RED*/, random(75, 150)/*GREEN*/};
+    long int droppers[2] = {random(30, 100)/*Item 0 in the list*/, random(30, 150)/*Item 1 in the list*/};
 
     for (int j=0; j<2; j++) {
         for (int i=0; i<droppers[j]; i++) {
@@ -113,7 +115,6 @@ void drop_levels(long int led_ls[2]) {  // this randomly drops the levels of two
         }
     }
 }
-
 
 
 /*
@@ -139,15 +140,37 @@ long int pick_two() {
     return first, second;
 }
 
+/*
+ * Creates a random number to help randomize when a new pattern is created
+ * */
+long int create_random_number() {
+    long int new_number;
+
+    long int remainder_executioner = 0;
+    long int starter = random(32, 1024);
+    long int multiplier = random(5, 17);
+    long int divider = random(1, 4);
+    long int subtrahend = random(20, (starter * multiplier) / divider) / 4;
+
+    if (((starter * multiplier) - subtrahend) % divider != 0) {  // I think this works...
+        remainder_executioner = (((starter * multiplier) - subtrahend) % divider) / divider;
+    }
+
+    new_number = ((starter * multiplier) - subtrahend) / divider - remainder_executioner;
+    new_number = round(new_number);
+
+    return new_number; // possible numbers: 35ish - 13056
+}
+
 
 /*
  * Every time show_color() is called, that is when the program will be
  * re-creating the pattern randomly, and essentially rebuilds the
  * cubes look...
  *
- * show_color() is only called periodically... show_green_mod
+ * show_color() is only called periodically... new_pattern_trigger
  * is the variable that controls how often it is called...
- * whatever number that is generated for show_green_mod will be
+ * whatever number that is generated for new_pattern_trigger will be
  * divided into the counter variable (which counts how many times
  * the program has looped), and if the remainder is zero, it will
  * run show_color() and create a new pattern
@@ -191,7 +214,7 @@ long int show_color() { // shows a random color by itself for 2 seconds
 /*
  * Sensor data output
  * */
-void serial_output() {
+void serial_output(void) {
     int photoCell = analogRead(PIN_SENSOR_ONE); // read in latest data
     int photoCell2 = analogRead(PIN_SENSOR_TWO); // read in latest data
 
@@ -216,9 +239,9 @@ void serial_output() {
  * in case they have changed.
  *
  * Also the main block of code that re-creates the blocks pattern if
- * show_green_mod divides evenly into counter.
+ * new_pattern_trigger divides evenly into counter.
  * */
-void transition() {  // main function that controls the LEDs
+void transition(void) {  // main function that controls the LEDs
     long int first = NULL;
     long int second = NULL;
     int increment_list[3] = {incrementRed, incrementGreen, incrementBlue}; // list of increment values
@@ -233,13 +256,13 @@ void transition() {  // main function that controls the LEDs
     incrementGreen = increment_list[1];
     incrementBlue = increment_list[2];
 
-    if (counter % show_green_mod == 0) { // if whatever random multiple of 8 divides evenly into our counter, then run:
+    if (counter % new_pattern_trigger == 0) { // if whatever random multiple of 8 divides evenly into our counter, then run:
         update();
         first, second = show_color();  // in this instance the LEDs are already chosen for us in show_color()
         long int list[2] = {first, second};
 
         drop_levels(list);  // we have to create a new starting point after toying with the levels
-        show_green_mod = random(32, 512) * 8;  // create new random number to change how often green shows up
+        new_pattern_trigger = create_random_number();
     }
 }
 
@@ -270,7 +293,7 @@ int check_color(int color, int increment) {  // This increments the LED if it ne
  * At the end it assigns the latest brightness value
  * to each LED
  * */
-void update_photoCell() {  // Updates the LEDs and the other parameter's status
+void update_photoCell(void) {  // Updates the LEDs and the other parameter's status
     int photoCell = analogRead(PIN_SENSOR_ONE); // read in latest data
     int photoCell2 = analogRead(PIN_SENSOR_TWO); // read in latest data from the other sensor
     int newCell = (photoCell + photoCell2) / 2;  // average of the two sensors readings to create the number we'll use
@@ -294,7 +317,13 @@ void update_photoCell() {  // Updates the LEDs and the other parameter's status
 }
 
 
-void update() {
+/*
+ * Assigns the given PWMs the amount of power to output
+ * ...This is probably called unnecessarily a lot, but
+ * I'd rather call it more than needed than not enough
+ * for this application.
+ * */
+void update(void) {
     analogWrite(PIN_RED, RGB[0]);
     analogWrite(PIN_GREEN, RGB[1]);
     analogWrite(PIN_BLUE, RGB[2]);
@@ -305,14 +334,14 @@ void update() {
 void loop(void) {
     if (counter < 32767) { // 32767 is the highest number you can use in a standard integer
         counter = counter + 1;
-        if (counter % 12 == 0 && counter != 0) {
+        if (counter % 12 == 0) {
+            update_photoCell();
             serial_output();
         }
     } else {  // if it is maxed out, set the variable equal to zero
         counter = 0;
     }
 
-    update_photoCell();
     update();
 
     if (RGB[0] <= 2 || RGB[1] <= 2 || RGB[2] <= 2) {  // if and when an LED is at its lowest point, pause
