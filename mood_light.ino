@@ -8,14 +8,13 @@
  * Creator: Spencer Mead
  |>-----------------------------------------------------------<|
  * Bugs / Glitches:
- *  - Sometimes the transition to another color will get
- *    stopped and then it catches up a couple seconds
- *    later.. rather dramatically changing the color...
+ *  - Sometimes the transition from blue to red will glitch
+ *    a bit
  |>-----------------------------------------------------------<|
  * Additional Notes:
  *
- *  update() gets called all over the place, because it's
- *  easier to have it that way
+ *  update() gets called all over the place, just because it's
+ *  easier
  |>-----------------------------------------------------------<|
  */
 
@@ -102,9 +101,9 @@ void warm_up(void) {
 
 
 /*
- * Drops the levels of the LEDs chosen in pick_two() to almost zero.
+ * Randomly drops the levels of the LEDs chosen in pick_two().
  * */
-void drop_levels(long int led_ls[2]) {  // this randomly drops the levels of two of the LEDs to get a bit of a random starting point
+void drop_levels(long int led_ls[2]) {
     long int droppers[2] = {random(30, 100)/*Item 0 in the list*/, random(30, 150)/*Item 1 in the list*/};
 
     for (int j=0; j<2; j++) {
@@ -227,7 +226,7 @@ void serial_output(void) {
     // other data:
     Serial.print("Global Delay: ");
     Serial.println(delay_time);  // prints the current delay time
-    Serial.print("Low Output Delay: ");
+    Serial.print("Low Output Delay: "); // the delay when an LED reaches <= 2
     Serial.println(pause);
     */
     Serial.println(); // in effect this is: "\n"
@@ -294,9 +293,15 @@ int check_color(int color, int increment) {  // This increments the LED if it ne
  * to each LED
  * */
 void update_photoCell(void) {  // Updates the LEDs and the other parameter's status
+    int newCell;
     int photoCell = analogRead(PIN_SENSOR_ONE); // read in latest data
     int photoCell2 = analogRead(PIN_SENSOR_TWO); // read in latest data from the other sensor
-    int newCell = (photoCell + photoCell2) / 2;  // average of the two sensors readings to create the number we'll use
+
+    if (photoCell > photoCell2) {
+        newCell = photoCell2;
+    } else {
+        newCell = photoCell;
+    }
 
     if (newCell >= 1019) {  // the darker it gets the slower the cube will get
         delay_time = 50;
@@ -320,8 +325,7 @@ void update_photoCell(void) {  // Updates the LEDs and the other parameter's sta
 /*
  * Assigns the given PWMs the amount of power to output
  * ...This is probably called unnecessarily a lot, but
- * I'd rather call it more than needed than not enough
- * for this application.
+ * I'd rather call it more than needed than not enough.
  * */
 void update(void) {
     analogWrite(PIN_RED, RGB[0]);
@@ -330,7 +334,7 @@ void update(void) {
 }
 
 
-/* Main program loop */
+/* Main loop */
 void loop(void) {
     if (counter < 32767) { // 32767 is the highest number you can use in a standard integer
         counter = counter + 1;
