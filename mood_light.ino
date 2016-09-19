@@ -1,5 +1,5 @@
 /*                    What's your Mood?...
- * <<<<<<<<<<<<<<<<<-/<<>><<>><<>><<>><<>>\->>>>>>>>>>>>>>>>>>
+ * <<<<<<<<<<<<<<<<<--<<>><<>><<>><<>><<>>-->>>>>>>>>>>>>>>>>>
  |>-----------------------------------------------------------<|
  * Date Created: August 22nd, 2016
  * Project: Mood Light
@@ -304,10 +304,10 @@ void update_photoCell(void) {  // Updates the LEDs and the other parameter's sta
     }
 
     if (newCell >= 1019) {  // the darker it gets the slower the cube will get
-        delay_time = 50;
+        delay_time = 55;
         pause = 750;
     } else if (newCell >= 1000) {  // the darkest its gotten is 10237
-        delay_time = 40;
+        delay_time = 50;
         pause = 500;
     } else if (newCell >= 900) {  // fully lit room usually winds up around 800 - 900
         delay_time = 25;
