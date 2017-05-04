@@ -8,13 +8,12 @@
  * Creator: Spencer Mead
  |>-----------------------------------------------------------<|
  * Bugs / Glitches:
- *  - Sometimes the transition from blue to red will glitch
- *    a bit
+ *  - The transition from blue to red will glitch
+ *    on occasion...
  |>-----------------------------------------------------------<|
  * Additional Notes:
  *
- *  update() gets called all over the place, just because it's
- *  easier
+ *  update() gets called all over the place (who cares about efficiency right?!)
  |>-----------------------------------------------------------<|
  */
 
