@@ -302,6 +302,7 @@ void update_photoCell(void) {  // Updates the LEDs and the other parameter's sta
         newCell = photoCell;
     }
 
+    // Switch case statement?
     if (newCell >= 1019) {  // the darker it gets the slower the cube will get
         delay_time = 55;
         pause = 750;
